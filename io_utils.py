@@ -19,8 +19,13 @@ def numpy_matrix(path, **kwargs):
 
 
 def sparse_matrix(path, column_count, delimiter=' ', index_value_delimiter=':'):
+    """
+    the column indices for row i are stored in indices[indptr[i]:indptr[i+1]]
+    and their corresponding values are stored in data[indptr[i]:indptr[i+1]].
+    return the numpy array (D,N)
+    """
     indptr = [0]
-    indices = []
+    indices = []  # column indices
     data = []
     shape = [0, column_count]
 
@@ -38,10 +43,13 @@ def sparse_matrix(path, column_count, delimiter=' ', index_value_delimiter=':'):
                 except ValueError:
                     indptr[-1] -= 1
 
-    return csr_matrix((np.array(data), indices, indptr), shape).T.toarray()
+    return csr_matrix((np.array(data), indices, indptr), shape).T.toarray()  # D,N
 
 
 def sparse_binary_matrix(path, column_count, delimiter=' '):
+    """
+    :return:  return the numpy array (D,N) consist of 1 and 0
+    """
     indptr = [0]
     indices = []
     shape = [0, column_count]
@@ -58,12 +66,12 @@ def sparse_binary_matrix(path, column_count, delimiter=' '):
                 else:
                     indptr[-1] -= 1
 
-    return csr_matrix((np.ones(len(indices)), indices, indptr), shape).T.toarray()
+    return csr_matrix((np.ones(len(indices)), indices, indptr), shape).T.toarray()  # (D,N)
 
 
 def mkdir(path):
     try:
         os.makedirs(path)
     except OSError as exception:
-        if exception.errno != errno.EEXIST:
+        if exception.errno != errno.EEXIST:  # the directory already exits
             raise

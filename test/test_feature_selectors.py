@@ -7,7 +7,6 @@ class TestFeatureSelector:
     def test_normalize(self):
         a = np.arange(5)
         expected_result = np.arange(5) / 4
-
         assert expected_result.tolist() == FeatureSelector.normalize(a).tolist()
 
     def test_rank_weights(self):
@@ -44,3 +43,7 @@ class TestSVM_RFE:
         correctly_ordered_ranks = svm_rfe.reverse_order(
             self.reversed_ranks)
         assert np.allclose([4, 2, 3, 4, 4, 2, 1], correctly_ordered_ranks)
+
+
+if __name__ == "__main__":
+    TestSVM_RFE().test_reverse_order()

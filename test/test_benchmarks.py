@@ -3,7 +3,7 @@ import numpy as np
 import robustness_measure
 import feature_selector
 from sklearn.dummy import DummyClassifier
-from sklearn.cross_validation import KFold
+from sklearn.model_selection import KFold
 from sklearn.metrics import f1_score
 
 
@@ -16,7 +16,8 @@ class TestFeatureRanksGenerator:
             np.arange(10),
             np.arange(10),
         ]).tolist()
-        assert expected_results == self.feature_selector.generate(data, labels, KFold(10, n_folds=2), "rank").tolist()
+        assert expected_results == self.feature_selector.generate(data, labels, KFold(n_splits=2).split(
+            np.arange(labels.shape[0])), "rank").tolist()
 
 
 class TestRobustnessBenchmark:
@@ -26,7 +27,7 @@ class TestRobustnessBenchmark:
     )
 
     def test_robustness(self):
-        assert 1 == self.benchmark.run(np.ones((10, 4)), np.arange(4))
+        assert 1 == self.benchmark.run(np.ones((10, 4)), np.arange(4), feature_selections=None)
 
 
 class TestClassifierWrapper:
@@ -39,8 +40,8 @@ class TestClassifierWrapper:
         data = np.random.randn(200, 10)
         labels = np.array([1, 1, 1, -1, -1, -1, -1, -1, -1, 1])
 
-        train_index = [range(7)]
-        test_index = [7, 8, 9]
+        train_index = np.arange(7)
+        test_index = np.array([7, 8, 9])
 
         results = np.zeros((2, 2))
         result_index = (0, 1)
@@ -76,4 +77,6 @@ class TestAccuracyBenchmark:
         assert [199, 198] == AccuracyBenchmark.highest_percent(l, 0.01).tolist()
 
 
-
+if __name__ == "__main__":
+    test = TestAccuracyBenchmark()
+    test.test_best_percent()

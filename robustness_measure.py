@@ -1,6 +1,15 @@
 from abc import ABCMeta, abstractmethod
 import scipy.stats
 import numpy as np
+"""
+RobustnessMeasure().run_and_set_in_result(feature selection, result, result_index)
+
+doing robustness analysis for feature selection(ranks)(D,cv)'s every combinations of different folds(cv(cv-1)/2) and 
+set all the results in result[result index]
+
+For different Robustness measure the similarity of two ranks is different
+Dummy Spearman Jaccard_Index
+"""
 
 
 class Measure(metaclass=ABCMeta):
@@ -8,17 +17,28 @@ class Measure(metaclass=ABCMeta):
         self.__name__ = type(self).__name__
 
     def run_and_set_in_results(self, features_selection, results, result_index):
+        """
+        feature selection (D,cv) are the ranks
+        result[result_index]= robustness measurement of every combination of feature selections (k(k-1)/2,)
+        """
+        #  features_selection ranks(D,K )D:features dimension K:times of feature selection method for one data set
         np.random.seed()
         results[result_index] = self.measures(features_selection)
 
     @abstractmethod
-    # features ranks is matrix with each rows represent a feature, and the columns its rankings
+    # features ranks is matrix with each rows represent a feature, and the columns its rankings  (D,K)
+    #  bigger ranking means the feature is more important
     def measures(self, features_ranks):
         pass
 
 
 class RobustnessMeasure(Measure, metaclass=ABCMeta):
     def measures(self, features_ranks):
+        """
+        features_ranks (D,cv)
+        return robustness which is the robustnesss of all combinations of feature ranks (k(k-1)/2,)
+        """
+        #  robustness store robust measure of every combination of results(K) of feature selection method
         robustness = []
         for i in range(1, features_ranks.shape[1]):
             for j in range(i):
@@ -51,7 +71,7 @@ class JaccardIndex(Measure):
         self.__name__ = "Jaccard Index {:.2%}".format(percentage)
 
     def measures(self, features_ranks):
-        if np.any(np.min(features_ranks, axis=0) != np.ones(features_ranks.shape[1], dtype=np.int)):
+        if np.any(np.min(features_ranks, axis=0) != np.ones(features_ranks.shape[1], dtype=np.int32)):
             print(features_ranks)
             raise ValueError('features_rank ranking does not always begin with a 1')
 
@@ -63,6 +83,7 @@ class JaccardIndex(Measure):
         features_ranks[0 != features_ranks] = 1
 
         k = features_ranks.shape[1]
+        #  jaccard_indices store jaccard index of every combination of results(K) of feature selection method
         jaccard_indices = []
 
         # jaccard_indices is symmetric
@@ -77,3 +98,6 @@ class JaccardIndex(Measure):
                 jaccard_indices.append(np.sum(intersection) / np.sum(union))
 
         return jaccard_indices
+
+
+

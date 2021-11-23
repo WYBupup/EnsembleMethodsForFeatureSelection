@@ -26,7 +26,7 @@ class TestRobustnessExperiment:
             robustness_measure.Dummy(),
             [feature_selector.DummyFeatureSelector(), feature_selector.DummyFeatureSelector()]
         )
-        experiment.results= np.array([[0.89,0.1]])
+        experiment.results = np.array([[0.89, 0.1]])
         experiment.print_results()
 
 
@@ -45,4 +45,12 @@ class TestAccuracyExperiment:
 
         ]
 
-        assert expected_accuracy == self.experiment.run(data, classes).tolist()
+        real = self.experiment.run(data, classes).tolist()
+        print(real)
+        self.experiment.print_results()
+        assert expected_accuracy == real
+
+
+if __name__ == "__main__":
+    test = TestAccuracyExperiment()
+    test.test_run()

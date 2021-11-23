@@ -38,6 +38,10 @@ class TestAccuracy:
 
     def test_goodness(self):
         rank_data = RankData([8, 0, 1, 2, 3, 4, 5, 6, 7], 4, 4)
-        expected_result = (1 + 2)/9
+        expected_result = (1 + 2) / 9
 
         assert expected_result == self.accuracy.goodness(rank_data)
+
+
+if __name__ == "__main__":
+    TestAccuracy().test_goodness()

@@ -3,14 +3,21 @@ import numpy as np
 from sklearn.utils import check_X_y, safe_sqr
 from sklearn.base import clone
 import sklearn.feature_selection
-from sklearn.grid_search import GridSearchCV
+from sklearn.model_selection import GridSearchCV
 from sklearn.svm import SVC
+"""
+SVC_Grid with C selected by 5-Fold internally
 
+RFE with stepwise
+
+all change the fit function
+"""
 
 class SVC_Grid(SVC):
     """
         SVC from scikit-learn with integrated Grid Search
     """
+
     def fit(self, data, labels, sample_weight=None):
         grid_search = GridSearchCV(
             SVC(),
@@ -33,25 +40,32 @@ class RFE(sklearn.feature_selection.RFE):
         If enabled:
         At each iteration (step * count of remaining features) are discarded
         instead of (step * total count of features)
+
+        in  sklearn.feature_selection.RFE the selected feature is ranked 1
     """
+
     def __init__(self, *args, stepwise_selection=False, **kwargs):
         super().__init__(*args, **kwargs)
         self.stepwise_selection = stepwise_selection
 
     def _fit(self, X, y, step_score=None):
-        X, y = check_X_y(X, y, "csc")
+        X, y = check_X_y(X, y, "csc")  # X (N,D)  y(N,)
         # Initialization
         n_features = X.shape[1]
         if self.n_features_to_select is None:
             n_features_to_select = n_features // 2
         else:
-            n_features_to_select = self.n_features_to_select
+            # the new version allows float while the author just consider the int condition
+            if 0 < self.n_features_to_select < 1:
+                n_features_to_select = int(max(1, self.n_features_to_select * n_features))
+            else:
+                n_features_to_select = int(self.n_features_to_select)  # the new version allows float
 
         if 0.0 < self.step < 1.0:
             if not self.stepwise_selection:
                 step = int(max(1, self.step * n_features))
             else:
-                step = self.step    
+                step = self.step
         else:
             if self.stepwise_selection:
                 warnings.warn("The parameter 'stepwise_selection' is true but "
@@ -62,15 +76,15 @@ class RFE(sklearn.feature_selection.RFE):
         if step <= 0:
             raise ValueError("Step must be >0")
 
-        if self.estimator_params is not None:
-            warnings.warn("The parameter 'estimator_params' is deprecated as "
-                          "of version 0.16 and will be removed in 0.18. The "
-                          "parameter is no longer necessary because the value "
-                          "is set via the estimator initialisation or "
-                          "set_params method.", DeprecationWarning)
+        # if self.estimator_params is not None:
+        #     warnings.warn("The parameter 'estimator_params' is deprecated as "
+        #                   "of version 0.16 and will be removed in 0.18. The "
+        #                   "parameter is no longer necessary because the value "
+        #                   "is set via the estimator initialisation or "
+        #                   "set_params method.", DeprecationWarning)
 
-        support_ = np.ones(n_features, dtype=np.bool)
-        ranking_ = np.ones(n_features, dtype=np.int)
+        support_ = np.ones(n_features, dtype=bool)
+        ranking_ = np.ones(n_features, dtype=int)
 
         if step_score:
             self.scores_ = []
@@ -82,8 +96,8 @@ class RFE(sklearn.feature_selection.RFE):
 
             # Rank the remaining features
             estimator = clone(self.estimator)
-            if self.estimator_params:
-                estimator.set_params(**self.estimator_params)
+            # if self.estimator_params:
+            #     estimator.set_params(**self.estimator_params)
             if self.verbose > 0:
                 print("Fitting estimator with %d features." % np.sum(support_))
 
@@ -112,7 +126,7 @@ class RFE(sklearn.feature_selection.RFE):
             if self.stepwise_selection and 0.0 < step < 1.0:
                 current_step_size = int(np.sum(support_) * step)
             else:
-                current_step_size = step 
+                current_step_size = step
             threshold = min(current_step_size, np.sum(support_) - n_features_to_select)
 
             # Compute step score on the previous selection iteration
@@ -126,8 +140,8 @@ class RFE(sklearn.feature_selection.RFE):
         # Set final attributes
         features = np.arange(n_features)[support_]
         self.estimator_ = clone(self.estimator)
-        if self.estimator_params:
-            self.estimator_.set_params(**self.estimator_params)
+        # if self.estimator_params:
+        #     self.estimator_.set_params(**self.estimator_params)
         self.estimator_.fit(X[:, features], y)
 
         # Compute step score when only n_features_to_select features left

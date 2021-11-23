@@ -35,3 +35,7 @@ class TestJaccardIndex:
         expected_result = [1/2, 1/2, 1/5]
 
         assert np.allclose(expected_result, jaccard.measures(features_ranks.T))
+
+
+if __name__=="__main__":
+    TestJaccardIndex().test_measures()
